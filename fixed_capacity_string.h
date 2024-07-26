@@ -14,12 +14,7 @@ public:
 	using const_pointer = const _Elem*;
 	using reference = _Elem&;
 	using const_reference = const _Elem&;
-	using iterator = std::_Array_iterator<_Elem, _Capacity>;
-	using const_iterator = std::_Array_const_iterator<_Elem, _Capacity>;
-	using reverse_iterator = std::reverse_iterator<iterator>;
-	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	using size_type = size_t;
-	using difference_type = ptrdiff_t;
 
 	static auto from_raw(const_pointer ptr) -> fixed_capacity_string_base
 	{
@@ -62,10 +57,7 @@ public:
 		_Traits::assign(obj.mArray[obj.mSize], _Elem());
 	}
 
-	auto c_str() const -> const_pointer
-	{
-		return mArray.data();
-	}
+	auto c_str() const -> const_pointer { return mArray.data(); }
 
 	auto sv() const -> std::basic_string_view<_Elem, _Traits>
 	{
@@ -99,7 +91,8 @@ public:
 		return *this;
 	}
 
-	auto assign(const std::basic_string_view<_Elem, _Traits>& sv) -> fixed_capacity_string_base&
+	auto assign(const std::basic_string_view<_Elem, _Traits>& sv)
+		-> fixed_capacity_string_base&
 	{
 		mSize = sv.size() > _Capacity ? _Capacity : sv.size();
 		_Traits::copy(mArray.data(), sv.data(), mSize);
@@ -107,10 +100,21 @@ public:
 		return *this;
 	}
 
-	auto assign(const std::basic_string<_Elem, _Traits>& str) -> fixed_capacity_string_base&
+	auto assign(const std::basic_string<_Elem, _Traits>& str)
+		-> fixed_capacity_string_base&
 	{
 		mSize = str.size() > _Capacity ? _Capacity : str.size();
 		_Traits::copy(mArray.data(), str.data(), mSize);
+		_Traits::assign(mArray[mSize], _Elem());
+		return *this;
+	}
+
+	template<size_t _OtherCapacity>
+	auto assign(fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
+		-> fixed_capacity_string_base&
+	{
+		mSize = other.size() > _Capacity ? _Capacity : other.size();
+		_Traits::copy(mArray.data(), other.data(), mSize);
 		_Traits::assign(mArray[mSize], _Elem());
 		return *this;
 	}
