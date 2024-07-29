@@ -53,7 +53,7 @@ public:
 	{
 		fixed_capacity_string_base obj;
 		obj.mSize = str.size() > _Capacity ? _Capacity : str.size();
-		_Traits::copy(obj.mArray.data(), str.c_str, obj.mSize);
+		_Traits::copy(obj.mArray.data(), str.c_str(), obj.mSize);
 		_Traits::assign(obj.mArray[obj.mSize], _Elem());
 	}
 
