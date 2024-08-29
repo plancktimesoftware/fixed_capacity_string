@@ -14,9 +14,9 @@ public:
 	using const_pointer = const _Elem*;
 	using reference = _Elem&;
 	using const_reference = const _Elem&;
-	using size_type = size_t;
+	static constexpr size_t npos = static_cast<size_t>(-1);
 
-	static auto from_sized(const_pointer ptr, size_type count) -> fixed_capacity_string_base
+	static auto from_sized(const_pointer ptr, size_t count) -> fixed_capacity_string_base
 	{
 		fixed_capacity_string_base obj;
 		if (ptr == nullptr) return obj;
@@ -56,11 +56,11 @@ public:
 		return std::basic_string<_Elem, _Traits>(mArray.data(), mSize);
 	}
 
-	auto length() const -> size_type { return mSize; }
-	auto size() const -> size_type { return mSize; }
-	auto capacity() const -> size_type { return _Capacity; }
+	auto length() const -> size_t { return mSize; }
+	auto size() const -> size_t { return mSize; }
+	auto capacity() const -> size_t { return _Capacity; }
 
-	auto assign(const_pointer ptr, size_type count) -> fixed_capacity_string_base&
+	auto assign(const_pointer ptr, size_t count) -> fixed_capacity_string_base&
 	{
 		mSize = count > _Capacity ? _Capacity : count;
 		_Traits::copy(mArray.data(), ptr, mSize);
@@ -92,7 +92,7 @@ public:
 		return assign(other.data(), other.size());
 	}
 
-	auto append(const_pointer ptr, size_type count) -> fixed_capacity_string_base&
+	auto append(const_pointer ptr, size_t count) -> fixed_capacity_string_base&
 	{
 		size_t oldSize = mSize;
 		mSize =
@@ -220,6 +220,28 @@ public:
 		_Traits::assign(mArray[mSize], _Elem());
 	}
 
+	auto erase(size_t index = 0, size_t count = npos)
+		-> fixed_capacity_string_base&
+	{
+		if (index >= mSize)
+			return *this;
+
+		if (count >= mSize - index)
+		{
+			// Erase till the end. Just add a null-terminator.
+			_Traits::assign(mArray[index], _Elem());
+			mSize = index;
+			return *this;
+		}
+
+		// There is a suffix remaining. Move it up front.
+		_Elem* const eraseAt = mArray.data() + index;
+		const size_t numElemsToMove = mSize - (index + count) + 1; // +1 to include the null-terminator.
+		_Traits::move(eraseAt, eraseAt + count, numElemsToMove);
+		mSize -= count;
+		return *this;
+	}
+
 	fixed_capacity_string_base() = default;
 	fixed_capacity_string_base(fixed_capacity_string_base& other) = default;
 	fixed_capacity_string_base(fixed_capacity_string_base&& other) = default;
@@ -232,7 +254,7 @@ public:
 	}
 
 private:
-	size_type mSize{};
+	size_t mSize{};
 	std::array<_Elem, _Capacity + 1> mArray{};
 };
 
