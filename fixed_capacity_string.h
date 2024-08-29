@@ -128,6 +128,98 @@ public:
 		return append(other.data(), other.size());
 	}
 
+	auto insert(size_t index, const_pointer ptr, size_t size)
+		-> fixed_capacity_string_base&
+	{
+		if (index >= mSize)
+			return append(ptr, size);
+
+		mSize =
+			_Capacity - mSize > size
+			? mSize + size
+			: _Capacity;
+
+		_Elem* const insertAt = mArray.data() + index;
+		if (size < _Capacity - index)
+		{
+			// Inserted range will not exceed capacity. So we need to move the suffix to the end.
+			const size_t numElemsToMove = mSize - (index + size) + 1; // +1 to include the null-terminator.
+			_Traits::move(insertAt + size, insertAt, numElemsToMove);
+		}
+		else
+		{
+			// Inserted range will exceed capacity. Just add a null-terminator at the new end.
+			_Traits::assign(mArray[mSize], _Elem());
+		}
+		const size_t numElemsToInsert = std::min(size, mSize - index);
+		_Traits::copy(insertAt, ptr, numElemsToInsert);
+		return *this;
+	}
+
+	auto insert(size_t index, const_pointer ptr) -> fixed_capacity_string_base&
+	{
+		return insert(index, ptr, _Traits::length(ptr));
+	}
+
+	auto insert(size_t index, const std::basic_string_view<_Elem, _Traits>& sv)
+		-> fixed_capacity_string_base&
+	{
+		return insert(index, sv.data(), sv.size());
+	}
+
+	auto insert(size_t index, const std::basic_string<_Elem, _Traits>& str)
+		-> fixed_capacity_string_base&
+	{
+		return insert(index, str.data(), str.size());
+	}
+
+	template<size_t _OtherCapacity>
+	auto insert(size_t index,
+				fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
+				-> fixed_capacity_string_base&
+	{
+		return insert(insert, other.data(), other.size());
+	}
+
+	auto insert(size_t index, size_t count, _Elem elem)
+		-> fixed_capacity_string_base&
+	{
+		const bool insertAtEnd = index >= mSize;
+		const size_t realIndex = insertAtEnd ? mSize : index;
+
+		mSize =
+			_Capacity - mSize > count
+			? mSize + count
+			: _Capacity;
+
+		_Elem* const insertAt = mArray.data() + realIndex;
+		if (!insertAtEnd &&
+			count < _Capacity - realIndex)
+		{
+			// We are inserting in the middle of the string, and
+			// the inserted range will not exceed capacity.
+			// So we need to move the suffix to the end.
+			const size_t numElemsToMove = mSize - (realIndex + count) + 1; // +1 to include the null-terminator.
+			_Traits::move(insertAt + count, insertAt, numElemsToMove);
+		}
+		else
+		{
+			// We are inserting at the end, or
+			// the inserted range will exceed capacity.
+			// Just add a null-terminator at the new end.
+			_Traits::assign(mArray[mSize], _Elem());
+		}
+		const size_t numElemsToInsert = std::min(count, mSize - realIndex);
+		_Traits::assign(insertAt, numElemsToInsert, elem);
+		return *this;
+	}
+
+	auto clear() -> void
+	{
+		mSize = 0;
+		_Traits::assign(mArray[mSize], _Elem());
+	}
+
 	fixed_capacity_string_base() = default;
 	fixed_capacity_string_base(fixed_capacity_string_base& other) = default;
 	fixed_capacity_string_base(fixed_capacity_string_base&& other) = default;
