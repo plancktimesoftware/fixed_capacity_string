@@ -16,19 +16,6 @@ public:
 	using const_reference = const _Elem&;
 	using size_type = size_t;
 
-	static auto from_raw(const_pointer ptr) -> fixed_capacity_string_base
-	{
-		fixed_capacity_string_base obj;
-		if (ptr == nullptr) return obj;
-
-		obj.mSize = _Traits::length(ptr);
-		if (obj.mSize > _Capacity)
-			obj.mSize = _Capacity;
-		_Traits::copy(obj.mArray.data(), ptr, obj.mSize);
-		_Traits::assign(obj.mArray[obj.mSize], _Elem());
-		return obj;
-	}
-
 	static auto from_sized(const_pointer ptr, size_type size) -> fixed_capacity_string_base
 	{
 		fixed_capacity_string_base obj;
@@ -40,21 +27,21 @@ public:
 		return obj;
 	}
 
-	static auto from_sv(const std::basic_string_view<_Elem, _Traits>& sv) -> fixed_capacity_string_base
+	static auto from_raw(const_pointer ptr) -> fixed_capacity_string_base
 	{
-		fixed_capacity_string_base obj;
-		obj.mSize = sv.size() > _Capacity ? _Capacity : sv.size();
-		_Traits::copy(obj.mArray.data(), sv.data(), obj.mSize);
-		_Traits::assign(obj.mArray[obj.mSize], _Elem());
-		return obj;
+		return from_sized(ptr, _Traits::length(ptr));
 	}
 
-	static auto from_str(const std::basic_string<_Elem, _Traits>& str) -> fixed_capacity_string_base
+	static auto from_sv(const std::basic_string_view<_Elem, _Traits>& sv)
+		-> fixed_capacity_string_base
 	{
-		fixed_capacity_string_base obj;
-		obj.mSize = str.size() > _Capacity ? _Capacity : str.size();
-		_Traits::copy(obj.mArray.data(), str.c_str(), obj.mSize);
-		_Traits::assign(obj.mArray[obj.mSize], _Elem());
+		return from_sized(sv.data(), sv.size());
+	}
+
+	static auto from_str(const std::basic_string<_Elem, _Traits>& str)
+		-> fixed_capacity_string_base
+	{
+		return from_sized(str.data(), str.size());
 	}
 
 	auto c_str() const -> const_pointer { return mArray.data(); }
@@ -73,16 +60,6 @@ public:
 	auto size() const -> size_type { return mSize; }
 	auto capacity() const -> size_type { return _Capacity; }
 
-	auto assign(const_pointer ptr) -> fixed_capacity_string_base&
-	{
-		mSize = _Traits::length(ptr);
-		if (mSize > _Capacity)
-			mSize = _Capacity;
-		_Traits::copy(mArray.data(), ptr, mSize);
-		_Traits::assign(mArray[mSize], _Elem());
-		return *this;
-	}
-
 	auto assign(const_pointer ptr, size_type size) -> fixed_capacity_string_base&
 	{
 		mSize = size > _Capacity ? _Capacity : size;
@@ -91,32 +68,64 @@ public:
 		return *this;
 	}
 
+	auto assign(const_pointer ptr) -> fixed_capacity_string_base&
+	{
+		return assign(ptr, _Traits::length(ptr));
+	}
+
 	auto assign(const std::basic_string_view<_Elem, _Traits>& sv)
 		-> fixed_capacity_string_base&
 	{
-		mSize = sv.size() > _Capacity ? _Capacity : sv.size();
-		_Traits::copy(mArray.data(), sv.data(), mSize);
-		_Traits::assign(mArray[mSize], _Elem());
-		return *this;
+		return assign(sv.data(), sv.size());
 	}
 
 	auto assign(const std::basic_string<_Elem, _Traits>& str)
 		-> fixed_capacity_string_base&
 	{
-		mSize = str.size() > _Capacity ? _Capacity : str.size();
-		_Traits::copy(mArray.data(), str.data(), mSize);
-		_Traits::assign(mArray[mSize], _Elem());
-		return *this;
+		return assign(str.data(), str.size());
 	}
 
 	template<size_t _OtherCapacity>
 	auto assign(fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
 		-> fixed_capacity_string_base&
 	{
-		mSize = other.size() > _Capacity ? _Capacity : other.size();
-		_Traits::copy(mArray.data(), other.data(), mSize);
+		return assign(other.data(), other.size());
+	}
+
+	auto append(const_pointer ptr, size_type size) -> fixed_capacity_string_base&
+	{
+		size_t oldSize = mSize;
+		mSize =
+			_Capacity - mSize > size
+			? mSize + size
+			: _Capacity;
+		_Traits::copy(mArray.data() + oldSize, ptr, mSize - oldSize);
 		_Traits::assign(mArray[mSize], _Elem());
 		return *this;
+	}
+
+	auto append(const_pointer ptr) -> fixed_capacity_string_base&
+	{
+		return append(ptr, _Traits::length(ptr));
+	}
+
+	auto append(const std::basic_string_view<_Elem, _Traits>& sv)
+		-> fixed_capacity_string_base&
+	{
+		return append(sv.data(), sv.size());
+	}
+
+	auto append(const std::basic_string<_Elem, _Traits>& str)
+		-> fixed_capacity_string_base&
+	{
+		return append(str.data(), str.size());
+	}
+
+	template<size_t _OtherCapacity>
+	auto append(fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
+		-> fixed_capacity_string_base&
+	{
+		return append(other.data(), other.size());
 	}
 
 	fixed_capacity_string_base() = default;
