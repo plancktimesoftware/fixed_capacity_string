@@ -16,12 +16,12 @@ public:
 	using const_reference = const _Elem&;
 	using size_type = size_t;
 
-	static auto from_sized(const_pointer ptr, size_type size) -> fixed_capacity_string_base
+	static auto from_sized(const_pointer ptr, size_type count) -> fixed_capacity_string_base
 	{
 		fixed_capacity_string_base obj;
 		if (ptr == nullptr) return obj;
 
-		obj.mSize = size > _Capacity ? _Capacity : size;
+		obj.mSize = count > _Capacity ? _Capacity : count;
 		_Traits::copy(obj.mArray.data(), ptr, obj.mSize);
 		_Traits::assign(obj.mArray[obj.mSize], _Elem());
 		return obj;
@@ -60,9 +60,9 @@ public:
 	auto size() const -> size_type { return mSize; }
 	auto capacity() const -> size_type { return _Capacity; }
 
-	auto assign(const_pointer ptr, size_type size) -> fixed_capacity_string_base&
+	auto assign(const_pointer ptr, size_type count) -> fixed_capacity_string_base&
 	{
-		mSize = size > _Capacity ? _Capacity : size;
+		mSize = count > _Capacity ? _Capacity : count;
 		_Traits::copy(mArray.data(), ptr, mSize);
 		_Traits::assign(mArray[mSize], _Elem());
 		return *this;
@@ -92,12 +92,12 @@ public:
 		return assign(other.data(), other.size());
 	}
 
-	auto append(const_pointer ptr, size_type size) -> fixed_capacity_string_base&
+	auto append(const_pointer ptr, size_type count) -> fixed_capacity_string_base&
 	{
 		size_t oldSize = mSize;
 		mSize =
-			_Capacity - mSize > size
-			? mSize + size
+			_Capacity - mSize > count
+			? mSize + count
 			: _Capacity;
 		_Traits::copy(mArray.data() + oldSize, ptr, mSize - oldSize);
 		_Traits::assign(mArray[mSize], _Elem());
@@ -128,30 +128,30 @@ public:
 		return append(other.data(), other.size());
 	}
 
-	auto insert(size_t index, const_pointer ptr, size_t size)
+	auto insert(size_t index, const_pointer ptr, size_t count)
 		-> fixed_capacity_string_base&
 	{
 		if (index >= mSize)
-			return append(ptr, size);
+			return append(ptr, count);
 
 		mSize =
-			_Capacity - mSize > size
-			? mSize + size
+			_Capacity - mSize > count
+			? mSize + count
 			: _Capacity;
 
 		_Elem* const insertAt = mArray.data() + index;
-		if (size < _Capacity - index)
+		if (count < _Capacity - index)
 		{
 			// Inserted range will not exceed capacity. So we need to move the suffix to the end.
-			const size_t numElemsToMove = mSize - (index + size) + 1; // +1 to include the null-terminator.
-			_Traits::move(insertAt + size, insertAt, numElemsToMove);
+			const size_t numElemsToMove = mSize - (index + count) + 1; // +1 to include the null-terminator.
+			_Traits::move(insertAt + count, insertAt, numElemsToMove);
 		}
 		else
 		{
 			// Inserted range will exceed capacity. Just add a null-terminator at the new end.
 			_Traits::assign(mArray[mSize], _Elem());
 		}
-		const size_t numElemsToInsert = std::min(size, mSize - index);
+		const size_t numElemsToInsert = std::min(count, mSize - index);
 		_Traits::copy(insertAt, ptr, numElemsToInsert);
 		return *this;
 	}
