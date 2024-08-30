@@ -4,6 +4,17 @@
 #include <string_view>
 #include <string>
 
+#if __cplusplus < 201703L
+#error "fixed_capacity_string requires atleast C++17"
+#endif
+
+#if __cplusplus >= 202002L
+#define _CONSTEXPR_20 constexpr
+#else
+#define _CONSTEXPR_20
+#endif
+
+
 template<size_t _Capacity, class _Elem, class _Traits = std::char_traits<_Elem>>
 class fixed_capacity_string_base
 {
@@ -16,7 +27,7 @@ public:
 	using const_reference = const _Elem&;
 	static constexpr size_t npos = static_cast<size_t>(-1);
 
-	static constexpr auto from_sized(const_pointer ptr, size_t count) -> fixed_capacity_string_base
+	static _CONSTEXPR_20 auto from_sized(const_pointer ptr, size_t count) -> fixed_capacity_string_base
 	{
 		fixed_capacity_string_base obj;
 		if (ptr == nullptr) return obj;
@@ -27,19 +38,19 @@ public:
 		return obj;
 	}
 
-	static constexpr auto from_raw(const_pointer ptr) -> fixed_capacity_string_base
+	static _CONSTEXPR_20 auto from_raw(const_pointer ptr) -> fixed_capacity_string_base
 	{
 		return from_sized(ptr, _Traits::length(ptr));
 	}
 
-	static constexpr auto from_sv(const std::basic_string_view<_Elem, _Traits>& sv)
+	static _CONSTEXPR_20 auto from_sv(const std::basic_string_view<_Elem, _Traits>& sv)
 		-> fixed_capacity_string_base
 	{
 		return from_sized(sv.data(), sv.size());
 	}
 
 	template<class _Alloc = std::allocator<_Elem>>
-	static constexpr auto from_str(const std::basic_string<_Elem, _Traits, _Alloc>& str)
+	static _CONSTEXPR_20 auto from_str(const std::basic_string<_Elem, _Traits, _Alloc>& str)
 		-> fixed_capacity_string_base
 	{
 		return from_sized(str.data(), str.size());
@@ -52,7 +63,7 @@ public:
 		return std::basic_string_view<_Elem, _Traits>(mArray.data(), mSize);
 	}
 
-	constexpr auto alloc_str() const -> std::basic_string<_Elem, _Traits>
+	_CONSTEXPR_20 auto alloc_str() const -> std::basic_string<_Elem, _Traits>
 	{
 		return std::basic_string<_Elem, _Traits>(mArray.data(), mSize);
 	}
@@ -61,7 +72,7 @@ public:
 	constexpr auto size() const -> size_t { return mSize; }
 	constexpr auto capacity() const -> size_t { return _Capacity; }
 
-	constexpr auto assign(const_pointer ptr, size_t count) -> fixed_capacity_string_base&
+	_CONSTEXPR_20 auto assign(const_pointer ptr, size_t count) -> fixed_capacity_string_base&
 	{
 		mSize = count > _Capacity ? _Capacity : count;
 		_Traits::copy(mArray.data(), ptr, mSize);
@@ -69,32 +80,32 @@ public:
 		return *this;
 	}
 
-	constexpr auto assign(const_pointer ptr) -> fixed_capacity_string_base&
+	_CONSTEXPR_20 auto assign(const_pointer ptr) -> fixed_capacity_string_base&
 	{
 		return assign(ptr, _Traits::length(ptr));
 	}
 
-	constexpr auto assign(const std::basic_string_view<_Elem, _Traits>& sv)
+	_CONSTEXPR_20 auto assign(const std::basic_string_view<_Elem, _Traits>& sv)
 		-> fixed_capacity_string_base&
 	{
 		return assign(sv.data(), sv.size());
 	}
 
 	template<class _Alloc = std::allocator<_Elem>>
-	constexpr auto assign(const std::basic_string<_Elem, _Traits, _Alloc>& str)
+	_CONSTEXPR_20 auto assign(const std::basic_string<_Elem, _Traits, _Alloc>& str)
 		-> fixed_capacity_string_base&
 	{
 		return assign(str.data(), str.size());
 	}
 
 	template<size_t _OtherCapacity>
-	constexpr auto assign(fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
+	_CONSTEXPR_20 auto assign(fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
 		-> fixed_capacity_string_base&
 	{
 		return assign(other.data(), other.size());
 	}
 
-	constexpr auto append(const_pointer ptr, size_t count) -> fixed_capacity_string_base&
+	_CONSTEXPR_20 auto append(const_pointer ptr, size_t count) -> fixed_capacity_string_base&
 	{
 		size_t oldSize = mSize;
 		mSize =
@@ -106,32 +117,32 @@ public:
 		return *this;
 	}
 
-	constexpr auto append(const_pointer ptr) -> fixed_capacity_string_base&
+	_CONSTEXPR_20 auto append(const_pointer ptr) -> fixed_capacity_string_base&
 	{
 		return append(ptr, _Traits::length(ptr));
 	}
 
-	constexpr auto append(const std::basic_string_view<_Elem, _Traits>& sv)
+	_CONSTEXPR_20 auto append(const std::basic_string_view<_Elem, _Traits>& sv)
 		-> fixed_capacity_string_base&
 	{
 		return append(sv.data(), sv.size());
 	}
 
 	template<class _Alloc = std::allocator<_Elem>>
-	constexpr auto append(const std::basic_string<_Elem, _Traits, _Alloc>& str)
+	_CONSTEXPR_20 auto append(const std::basic_string<_Elem, _Traits, _Alloc>& str)
 		-> fixed_capacity_string_base&
 	{
 		return append(str.data(), str.size());
 	}
 
 	template<size_t _OtherCapacity>
-	constexpr auto append(fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
+	_CONSTEXPR_20 auto append(fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
 		-> fixed_capacity_string_base&
 	{
 		return append(other.data(), other.size());
 	}
 
-	constexpr auto insert(size_t index, const_pointer ptr, size_t count)
+	_CONSTEXPR_20 auto insert(size_t index, const_pointer ptr, size_t count)
 		-> fixed_capacity_string_base&
 	{
 		if (index >= mSize)
@@ -157,33 +168,33 @@ public:
 		return *this;
 	}
 
-	constexpr auto insert(size_t index, const_pointer ptr) -> fixed_capacity_string_base&
+	_CONSTEXPR_20 auto insert(size_t index, const_pointer ptr) -> fixed_capacity_string_base&
 	{
 		return insert(index, ptr, _Traits::length(ptr));
 	}
 
-	constexpr auto insert(size_t index, const std::basic_string_view<_Elem, _Traits>& sv)
+	_CONSTEXPR_20 auto insert(size_t index, const std::basic_string_view<_Elem, _Traits>& sv)
 		-> fixed_capacity_string_base&
 	{
 		return insert(index, sv.data(), sv.size());
 	}
 
 	template<class _Alloc = std::allocator<_Elem>>
-	constexpr auto insert(size_t index, const std::basic_string<_Elem, _Traits, _Alloc>& str)
+	_CONSTEXPR_20 auto insert(size_t index, const std::basic_string<_Elem, _Traits, _Alloc>& str)
 		-> fixed_capacity_string_base&
 	{
 		return insert(index, str.data(), str.size());
 	}
 
 	template<size_t _OtherCapacity>
-	constexpr auto insert(size_t index,
+	_CONSTEXPR_20 auto insert(size_t index,
 				fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
 				-> fixed_capacity_string_base&
 	{
 		return insert(index, other.data(), other.size());
 	}
 
-	constexpr auto insert(size_t index, size_t count, _Elem elem)
+	_CONSTEXPR_20 auto insert(size_t index, size_t count, _Elem elem)
 		-> fixed_capacity_string_base&
 	{
 		const bool insertAtEnd = index >= mSize;
@@ -211,13 +222,13 @@ public:
 		return *this;
 	}
 
-	constexpr auto clear() -> void
+	_CONSTEXPR_20 auto clear() -> void
 	{
 		mSize = 0;
 		_Traits::assign(mArray[mSize], _Elem());
 	}
 
-	constexpr auto erase(size_t index = 0, size_t count = npos)
+	_CONSTEXPR_20 auto erase(size_t index = 0, size_t count = npos)
 		-> fixed_capacity_string_base&
 	{
 		if (index >= mSize)
@@ -239,7 +250,7 @@ public:
 		return *this;
 	}
 
-	constexpr auto replace(size_t index, size_t count, const_pointer ptr, size_t count2)
+	_CONSTEXPR_20 auto replace(size_t index, size_t count, const_pointer ptr, size_t count2)
 		-> fixed_capacity_string_base&
 	{
 		if (index >= mSize)
@@ -271,20 +282,20 @@ public:
 		return *this;
 	}
 
-	constexpr auto replace(size_t index, size_t count, const_pointer ptr)
+	_CONSTEXPR_20 auto replace(size_t index, size_t count, const_pointer ptr)
 		-> fixed_capacity_string_base&
 	{
 		return replace(index, count, ptr, _Traits::length(ptr));
 	}
 
-	constexpr auto replace(size_t index, size_t count, const std::basic_string_view<_Elem, _Traits>& sv)
+	_CONSTEXPR_20 auto replace(size_t index, size_t count, const std::basic_string_view<_Elem, _Traits>& sv)
 		-> fixed_capacity_string_base&
 	{
 		return replace(index, count, sv.data(), sv.size());
 	}
 
 	template<class _Alloc = std::allocator<_Elem>>
-	constexpr auto replace(size_t index, size_t count,
+	_CONSTEXPR_20 auto replace(size_t index, size_t count,
 				 const std::basic_string<_Elem, _Traits, _Alloc>& str)
 				 -> fixed_capacity_string_base&
 	{
@@ -292,14 +303,14 @@ public:
 	}
 
 	template<size_t _OtherCapacity>
-	constexpr auto replace(size_t index, size_t count,
+	_CONSTEXPR_20 auto replace(size_t index, size_t count,
 		fixed_capacity_string_base<_OtherCapacity, _Elem, _Traits>& other)
 		-> fixed_capacity_string_base&
 	{
 		return replace(index, count, other.data(), other.size());
 	}
 
-	constexpr auto swap(fixed_capacity_string_base& other) -> void
+	_CONSTEXPR_20 auto swap(fixed_capacity_string_base& other) -> void
 	{
 		mArray.swap(other.mArray);
 		std::swap(mSize, other.mSize);
